@@ -58,9 +58,11 @@ public:
     int16_t temperature; // Chip temperature
 	
 	//! TODO: Description
+	/*
 	float abias[3];
 	float gbias[3];
-
+	*/
+	
 	// LSM9DS1 -- LSM9DS1 class constructor
 	// The constructor will set up a handful of private variables, and set the
 	// communication mode as well.
@@ -81,27 +83,7 @@ public:
 	// in the IMUSettings struct will take effect after calling this function.
 	uint16_t begin();
 	
-	// begin() -- Initialize the gyro, accelerometer, and magnetometer.
-	// This will set up the scale and output rate of each sensor. It'll also
-	// "turn on" every sensor and every axis of every sensor.
-	// Input:
-	//	- gScl = The scale of the gyroscope. This should be a gyro_scale value.
-	//	- aScl = The scale of the accelerometer. Should be a accel_scale value.
-	//	- mScl = The scale of the magnetometer. Should be a mag_scale value.
-	//	- gODR = Output data rate of the gyroscope. gyro_odr value.
-	//	- aODR = Output data rate of the accelerometer. accel_odr value.
-	//	- mODR = Output data rate of the magnetometer. mag_odr value.
-	// Output: The function will return an unsigned 16-bit value. The most-sig
-	//		bytes of the output are the WHO_AM_I reading of the accel. The
-	//		least significant two bytes are the WHO_AM_I reading of the gyro.
-	// All parameters have a defaulted value, so you can call just "begin()".
-	// Default values are FSR's of:  245DPS, 2g, 2Gs; ODRs of 95 Hz for 
-	// gyro, 100 Hz for accelerometer, 100 Hz for magnetometer.
-	// Use the return value of this function to verify communication.
-	/*uint16_t begin(gyro_scale gScl = G_SCALE_245DPS, 
-				accel_scale aScl = A_SCALE_2G, mag_scale mScl = M_SCALE_4GS,
-				gyro_odr gODR = G_ODR_952, accel_odr aODR = XL_ODR_50, 
-				mag_odr mODR = M_ODR_80);*/
+	void calibrate(float * gbias, float * abias);
 	
 	// accelAvailable() -- Polls the accelerometer status register to check
 	// if new data is available.
@@ -239,34 +221,27 @@ public:
 	//	- mRate = The desired output rate of the mag.
 	void setMagODR(uint8_t mRate);
 		
-	// INT_GEN_CFG_XL
 	void configAccelInt(uint8_t generator, bool andInterrupts = false);
-	// INT_GEN_THS_X_XL, INT_GEN_THS_Y_XL, INT_GEN_THS_Z_XL, INT_GEN_DUR_XL
 	void configAccelThs(uint8_t threshold, lsm9ds1_axis axis, uint8_t duration = 0, bool wait = 0);
 	
-	// INT_GEN_CFG_G
 	void configGyroInt(uint8_t generator, bool aoi, bool latch);
-	// INT_GEN_THS_X_G, INT_GEN_THS_Y_G, INT_GEN_THS_Z_G, INT_GEN_DUR_G
 	void configGyroThs(int16_t threshold, lsm9ds1_axis axis, uint8_t duration, bool wait);
 	
-	// INT_CFG_M
 	void configMagInt(uint8_t generator, h_lactive activeLow, bool latch = true);
-	// INT_THS_L
 	void configMagThs(uint16_t threshold);
 		
-	// INT1_CTRL, INT2_CTRL, CTRL_REG8
 	void configInt(interrupt_select interupt, uint8_t generator,
 				   h_lactive activeLow = INT_ACTIVE_LOW, pp_od pushPull = INT_PUSH_PULL);
 		
-	// INT_GEN_SRC_G
 	uint8_t getGyroIntSrc();
-	// INT_GEN_SRC_XL
 	uint8_t getAccelIntSrc();
-	// INT_SRC_M
 	uint8_t getMagIntSrc();
-		
-		// CTRL_REG9
-		void sleepGyro(bool enable);
+	
+	void sleepGyro(bool enable = true);
+	
+	void enableFIFO(bool enable = true);
+	void setFIFO(fifoMode_type fifoMode, uint8_t fifoThs);
+	uint8_t getFIFOSamples();
 		
 
 protected:	

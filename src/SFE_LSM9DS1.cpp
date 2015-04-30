@@ -33,6 +33,8 @@ Distributed as-is; no warranty is given.
   #include "WProgram.h"
 #endif
 
+float magSensitivity[4] = {0.00014, 0.00029, 0.00043, 0.00058};
+
 LSM9DS1::LSM9DS1()
 {
 	init(IMU_MODE_I2C, LSM9DS1_AG_ADDR(1), LSM9DS1_M_ADDR(1));
@@ -306,6 +308,50 @@ void LSM9DS1::initAccel()
 		tempRegValue |= (settings.accel.highResBandwidth & 0x3) << 5;
 	}
 	xgWriteByte(CTRL_REG7_XL, tempRegValue);
+}
+
+// This is a function that uses the FIFO to accumulate sample of accelerometer and gyro data, average
+// them, scales them to  gs and deg/s, respectively, and then passes the biases to the main sketch
+// for subtraction from all subsequent data. There are no gyro and accelerometer bias registers to store
+// the data as there are in the ADXL345, a precursor to the LSM9DS0, or the MPU-9150, so we have to
+// subtract the biases ourselves. This results in a more accurate measurement in general and can
+// remove errors due to imprecise or varying initial placement. Calibration of sensor data in this manner
+// is good practice.
+void LSM9DS1::calibrate(float * gbias, float * abias)
+{  
+	uint8_t data[6] = {0, 0, 0, 0, 0, 0};
+	int32_t gyro_bias[3] = {0, 0, 0}, accel_bias[3] = {0, 0, 0};
+	int samples, ii;
+	
+	// Turn on FIFO and set threshold to 32 samples
+	enableFIFO(true);
+	setFIFO(FIFO_THS, 0x1F);
+
+	while (samples < 32)
+	{
+		samples = (xgReadByte(FIFO_SRC) & 0x3F); // Read number of stored samples
+	}
+	for(ii = 0; ii < samples ; ii++) 
+	{	// Read the gyro data stored in the FIFO
+		readGyro();
+		gyro_bias[0] += gx;
+		gyro_bias[1] += gy;
+		gyro_bias[2] += gz;
+		readAccel();
+		accel_bias[0] += ax;
+		accel_bias[1] += ay;
+		accel_bias[2] += az - (int16_t)(1./aRes); // Assumes sensor facing up!
+	}  
+	for (ii = 0; ii < 3; ii++)
+	{
+		gyro_bias[ii] /= samples;
+		gbias[ii] = calcGyro(gyro_bias[ii]);
+		accel_bias[ii] /= samples;
+		abias[ii] = calcAccel(accel_bias[ii]);
+	}
+	
+	enableFIFO(false);
+	setFIFO(FIFO_OFF, 0x00);
 }
 
 void LSM9DS1::initMag()
@@ -620,17 +666,33 @@ void LSM9DS1::setMagODR(uint8_t mRate)
 
 void LSM9DS1::calcgRes()
 {
-	gRes = ((float) settings.gyro.scale) / ((float) (1<<15));
+	gRes = ((float) settings.gyro.scale) / 32768.0;
 }
 
 void LSM9DS1::calcaRes()
 {
-	aRes = ((float) settings.accel.scale) / ((float) (1<<15));
+	aRes = ((float) settings.accel.scale) / 32768.0;
 }
 
 void LSM9DS1::calcmRes()
 {
-	mRes = ((float) settings.mag.scale) / ((float) (1<<15));
+	//mRes = ((float) settings.mag.scale) / 32768.0;
+	switch (settings.mag.scale)
+	{
+	case 4:
+		mRes = magSensitivity[0];
+		break;
+	case 8:
+		mRes = magSensitivity[1];
+		break;
+	case 12:
+		mRes = magSensitivity[2];
+		break;
+	case 16:
+		mRes = magSensitivity[3];
+		break;
+	}
+	
 }
 
 void LSM9DS1::configInt(interrupt_select interrupt, uint8_t generator,
@@ -762,6 +824,35 @@ uint8_t LSM9DS1::getMagIntSrc()
 	}
 	
 	return 0;
+}
+
+void LSM9DS1::sleepGyro(bool enable)
+{
+	uint8_t temp = xgReadByte(CTRL_REG9);
+	if (enable) temp |= (1<<6);
+	else temp &= ~(1<<6);
+	xgWriteByte(CTRL_REG9, temp);
+}
+
+void LSM9DS1::enableFIFO(bool enable)
+{
+	uint8_t temp = xgReadByte(CTRL_REG9);
+	if (enable) temp |= (1<<1);
+	else temp &= ~(1<<1);
+	xgWriteByte(CTRL_REG9, temp);
+}
+
+void LSM9DS1::setFIFO(fifoMode_type fifoMode, uint8_t fifoThs)
+{
+	// Limit threshold - 0x1F (31) is the maximum. If more than that was asked
+	// limit it to the maximum.
+	uint8_t threshold = fifoThs <= 0x1F ? fifoThs : 0x1F;
+	xgWriteByte(FIFO_CTRL, ((fifoMode & 0x7) << 5) | (threshold & 0x1F));
+}
+
+uint8_t LSM9DS1::getFIFOSamples()
+{
+	return (xgReadByte(FIFO_SRC) & 0x3F);
 }
 
 void LSM9DS1::constrainScales()
