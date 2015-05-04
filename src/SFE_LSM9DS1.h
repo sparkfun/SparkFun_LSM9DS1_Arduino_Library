@@ -56,12 +56,8 @@ public:
 	int16_t ax, ay, az; // x, y, and z axis readings of the accelerometer
 	int16_t mx, my, mz; // x, y, and z axis readings of the magnetometer
     int16_t temperature; // Chip temperature
-	
-	//! TODO: Description
-	/*
-	float abias[3];
-	float gbias[3];
-	*/
+	float gBias[3], aBias[3], mBias[3];
+	int16_t gBiasRaw[3], aBiasRaw[3], mBiasRaw[3];
 	
 	// LSM9DS1 -- LSM9DS1 class constructor
 	// The constructor will set up a handful of private variables, and set the
@@ -75,15 +71,15 @@ public:
 	//				If IMU_MODE_SPI, this is the cs pin of the magnetometer (CS_M)
 	LSM9DS1(interface_mode interface, uint8_t xgAddr, uint8_t mAddr);
 	LSM9DS1();
-	void init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr);
-	
-	
+		
 	// begin() -- Initialize the gyro, accelerometer, and magnetometer.
 	// This will set up the scale and output rate of each sensor. The values set
 	// in the IMUSettings struct will take effect after calling this function.
 	uint16_t begin();
 	
-	void calibrate(float * gbias, float * abias);
+	void calibrate(bool autoCalc = true);
+	void calibrateMag(bool loadIn = true);
+	void magOffset(uint8_t axis, int16_t offset);
 	
 	// accelAvailable() -- Polls the accelerometer status register to check
 	// if new data is available.
@@ -220,7 +216,8 @@ public:
 	// Input:
 	//	- mRate = The desired output rate of the mag.
 	void setMagODR(uint8_t mRate);
-		
+	
+	//! TODO: Document all of these functions:
 	void configAccelInt(uint8_t generator, bool andInterrupts = false);
 	void configAccelThs(uint8_t threshold, lsm9ds1_axis axis, uint8_t duration = 0, bool wait = 0);
 	
@@ -248,19 +245,23 @@ protected:
 	// x_mAddress and gAddress store the I2C address or SPI chip select pin
 	// for each sensor.
 	uint8_t _mAddress, _xgAddress;
-	// _interfaceMode keeps track of whether we're using SPI or I2C to talk
-	//interface_mode _interfaceMode;
-	
-	// gScale, aScale, and mScale store the current scale range for each 
-	// sensor. Should be updated whenever that value changes.
-	/*gyro_scale gScale;
-	accel_scale aScale;
-	mag_scale mScale;*/
 	
 	// gRes, aRes, and mRes store the current resolution for each sensor. 
 	// Units of these values would be DPS (or g's or Gs's) per ADC tick.
 	// This value is calculated as (sensor scale) / (2^15).
 	float gRes, aRes, mRes;
+	
+	// _autoCalc keeps track of whether we're automatically subtracting off
+	// accelerometer and gyroscope bias calculated in calibrate().
+	bool _autoCalc;
+	
+	// init() -- Sets up gyro, accel, and mag settings to default.
+	// - interface - Sets the interface mode (IMU_MODE_I2C or IMU_MODE_SPI)
+	// - xgAddr - Sets either the I2C address of the accel/gyro or SPI chip 
+	//   select pin connected to the CS_XG pin.
+	// - mAddr - Sets either the I2C address of the magnetometer or SPI chip 
+	//   select pin connected to the CS_M pin.
+	void init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr);
 	
 	// initGyro() -- Sets up the gyroscope to begin reading.
 	// This function steps through all five gyroscope control registers.

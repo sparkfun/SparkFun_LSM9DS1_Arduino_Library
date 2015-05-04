@@ -65,7 +65,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 	// gyro cutoff frequency: value between 0-3
 	// Actual value of cutoff frequency depends
 	// on sample rate.
-	settings.gyro.bandwidth = 3;
+	settings.gyro.bandwidth = 0;
 	settings.gyro.lowPowerEnable = false;
 	settings.gyro.HPFEnable = false;
 	// Gyro HPF cutoff frequency: value between 0-9
@@ -93,7 +93,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 	// -1 = bandwidth determined by sample rate
 	// 0 = 408 Hz   2 = 105 Hz
 	// 1 = 211 Hz   3 = 50 Hz
-	settings.accel.bandwidth = -1;
+	settings.accel.bandwidth = 3;
 	settings.accel.highResEnable = false;
 	// accelHighResBandwidth can be any value between 0-3
 	// LP cutoff is set to a factor of sample rate
@@ -114,8 +114,8 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 	// magPerformance can be any value between 0-3
 	// 0 = Low power mode      2 = high performance
 	// 1 = medium performance  3 = ultra-high performance
-	settings.mag.XYPerformance = 0;
-	settings.mag.ZPerformance = 0;
+	settings.mag.XYPerformance = 3;
+	settings.mag.ZPerformance = 3;
 	settings.mag.lowPowerEnable = false;
 	// magOperatingMode can be 0-2
 	// 0 = continuous conversion
@@ -124,6 +124,16 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 	settings.mag.operatingMode = 0;
 
 	settings.temp.enabled = true;
+	for (int i=0; i<3; i++)
+	{
+		gBias[i] = 0;
+		aBias[i] = 0;
+		mBias[i] = 0;
+		gBiasRaw[i] = 0;
+		aBiasRaw[i] = 0;
+		mBiasRaw[i] = 0;
+	}
+	_autoCalc = false;
 }
 
 
@@ -317,16 +327,17 @@ void LSM9DS1::initAccel()
 // subtract the biases ourselves. This results in a more accurate measurement in general and can
 // remove errors due to imprecise or varying initial placement. Calibration of sensor data in this manner
 // is good practice.
-void LSM9DS1::calibrate(float * gbias, float * abias)
+void LSM9DS1::calibrate(bool autoCalc)
 {  
 	uint8_t data[6] = {0, 0, 0, 0, 0, 0};
-	int32_t gyro_bias[3] = {0, 0, 0}, accel_bias[3] = {0, 0, 0};
-	int samples, ii;
+	uint8_t samples = 0;
+	int ii;
+	int32_t aBiasRawTemp[3] = {0, 0, 0};
+	int32_t gBiasRawTemp[3] = {0, 0, 0};
 	
 	// Turn on FIFO and set threshold to 32 samples
 	enableFIFO(true);
 	setFIFO(FIFO_THS, 0x1F);
-
 	while (samples < 32)
 	{
 		samples = (xgReadByte(FIFO_SRC) & 0x3F); // Read number of stored samples
@@ -334,24 +345,67 @@ void LSM9DS1::calibrate(float * gbias, float * abias)
 	for(ii = 0; ii < samples ; ii++) 
 	{	// Read the gyro data stored in the FIFO
 		readGyro();
-		gyro_bias[0] += gx;
-		gyro_bias[1] += gy;
-		gyro_bias[2] += gz;
+		gBiasRawTemp[0] += gx;
+		gBiasRawTemp[1] += gy;
+		gBiasRawTemp[2] += gz;
 		readAccel();
-		accel_bias[0] += ax;
-		accel_bias[1] += ay;
-		accel_bias[2] += az - (int16_t)(1./aRes); // Assumes sensor facing up!
+		aBiasRawTemp[0] += ax;
+		aBiasRawTemp[1] += ay;
+		aBiasRawTemp[2] += az - (int16_t)(1./aRes); // Assumes sensor facing up!
 	}  
 	for (ii = 0; ii < 3; ii++)
 	{
-		gyro_bias[ii] /= samples;
-		gbias[ii] = calcGyro(gyro_bias[ii]);
-		accel_bias[ii] /= samples;
-		abias[ii] = calcAccel(accel_bias[ii]);
+		gBiasRaw[ii] = gBiasRawTemp[ii] / samples;
+		gBias[ii] = calcGyro(gBiasRaw[ii]);
+		aBiasRaw[ii] = aBiasRawTemp[ii] / samples;
+		aBias[ii] = calcAccel(aBiasRaw[ii]);
 	}
 	
 	enableFIFO(false);
 	setFIFO(FIFO_OFF, 0x00);
+	
+	if (autoCalc) _autoCalc = true;
+}
+
+void LSM9DS1::calibrateMag(bool loadIn)
+{
+	int i, j;
+	int16_t magMin[3] = {0, 0, 0};
+	int16_t magMax[3] = {0, 0, 0}; // The road warrior
+	
+	for (i=0; i<128; i++)
+	{
+		while (!magAvailable())
+			;
+		readMag();
+		int16_t magTemp[3] = {0, 0, 0};
+		magTemp[0] = mx;		
+		magTemp[1] = my;
+		magTemp[2] = mz;
+		for (j = 0; j < 3; j++)
+		{
+			if (magTemp[j] > magMax[j]) magMax[j] = magTemp[j];
+			if (magTemp[j] < magMin[j]) magMin[j] = magTemp[j];
+		}
+	}
+	for (j = 0; j < 3; j++)
+	{
+		mBiasRaw[j] = (magMax[j] + magMin[j]) / 2;
+		mBias[j] = calcMag(mBiasRaw[j]);
+		if (loadIn)
+			magOffset(j, mBiasRaw[j]);
+	}
+	
+}
+void LSM9DS1::magOffset(uint8_t axis, int16_t offset)
+{
+	if (axis > 2)
+		return;
+	uint8_t msb, lsb;
+	msb = (offset & 0xFF00) >> 8;
+	lsb = offset & 0x00FF;
+	mWriteByte(OFFSET_X_REG_L_M + (2 * axis), lsb);
+	mWriteByte(OFFSET_X_REG_H_M + (2 * axis), msb);
 }
 
 void LSM9DS1::initMag()
@@ -459,13 +513,25 @@ void LSM9DS1::readAccel()
 	ax = (temp[1] << 8) | temp[0]; // Store x-axis values into ax
 	ay = (temp[3] << 8) | temp[2]; // Store y-axis values into ay
 	az = (temp[5] << 8) | temp[4]; // Store z-axis values into az
+	if (_autoCalc)
+	{
+		ax -= aBiasRaw[X_AXIS];
+		ay -= aBiasRaw[Y_AXIS];
+		az -= aBiasRaw[Z_AXIS];
+	}
 }
 
 int16_t LSM9DS1::readAccel(lsm9ds1_axis axis)
 {
 	uint8_t temp[2];
+	int16_t value;
 	xgReadBytes(OUT_X_L_XL + (2 * axis), temp, 2);
-	return (temp[1] << 8) | temp[0];
+	value = (temp[1] << 8) | temp[0];
+	
+	if (_autoCalc)
+		value -= aBiasRaw[axis];
+	
+	return value;
 }
 
 void LSM9DS1::readMag()
@@ -498,13 +564,27 @@ void LSM9DS1::readGyro()
 	gx = (temp[1] << 8) | temp[0]; // Store x-axis values into gx
 	gy = (temp[3] << 8) | temp[2]; // Store y-axis values into gy
 	gz = (temp[5] << 8) | temp[4]; // Store z-axis values into gz
+	if (_autoCalc)
+	{
+		gx -= gBiasRaw[X_AXIS];
+		gy -= gBiasRaw[Y_AXIS];
+		gz -= gBiasRaw[Z_AXIS];
+	}
 }
 
 int16_t LSM9DS1::readGyro(lsm9ds1_axis axis)
 {
 	uint8_t temp[2];
+	int16_t value;
+	
 	xgReadBytes(OUT_X_L_G + (2 * axis), temp, 2);
-	return (temp[1] << 8) | temp[0];
+	
+	value = (temp[1] << 8) | temp[0];
+	
+	if (_autoCalc)
+		value -= gBiasRaw[axis];
+	
+	return value;
 }
 
 float LSM9DS1::calcGyro(int16_t gyro)
