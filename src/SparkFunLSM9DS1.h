@@ -19,8 +19,8 @@ local, and you've found our code helpful, please buy us a round!
 
 Distributed as-is; no warranty is given.
 ******************************************************************************/
-#ifndef __SFE_LSM9DS1_H__
-#define __SFE_LSM9DS1_H__
+#ifndef __SparkFunLSM9DS1_H__
+#define __SparkFunLSM9DS1_H__
 
 #if defined(ARDUINO) && ARDUINO >= 100
   #include "Arduino.h"

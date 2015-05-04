@@ -21,7 +21,7 @@ local, and you've found our code helpful, please buy us a round!
 Distributed as-is; no warranty is given.
 ******************************************************************************/
 
-#include "SFE_LSM9DS1.h"
+#include "SparkFunLSM9DS1.h"
 #include "LSM9DS1_Registers.h"
 #include "LSM9DS1_Types.h"
 #include <Wire.h> // Wire library is used for I2C
@@ -338,7 +338,7 @@ void LSM9DS1::calibrate(bool autoCalc)
 	// Turn on FIFO and set threshold to 32 samples
 	enableFIFO(true);
 	setFIFO(FIFO_THS, 0x1F);
-	while (samples < 32)
+	while (samples < 0x1F)
 	{
 		samples = (xgReadByte(FIFO_SRC) & 0x3F); // Read number of stored samples
 	}
