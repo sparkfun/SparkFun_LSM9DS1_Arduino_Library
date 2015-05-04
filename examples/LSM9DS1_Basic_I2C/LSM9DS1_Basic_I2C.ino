@@ -66,7 +66,7 @@ LSM9DS1 imu;
 ///////////////////////
 // Example I2C Setup //
 ///////////////////////
-// SDO_XM and SDO_G are both grounded, so our addresses are:
+// SDO_XM and SDO_G are both pulled high, so our addresses are:
 #define LSM9DS1_M	0x1E // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG	0x6B // Would be 0x6A if SDO_AG is LOW
 
@@ -75,7 +75,7 @@ LSM9DS1 imu;
 ////////////////////////////
 #define PRINT_CALCULATED
 //#define PRINT_RAW
-#define PRINT_SPEED 250 // 500 ms between prints
+#define PRINT_SPEED 250 // 250 ms between prints
 
 // Earth's magnetic field varies by location. Add or subtract 
 // a declination to get a more accurate heading. Calculate 

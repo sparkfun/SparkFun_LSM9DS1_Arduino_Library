@@ -79,7 +79,7 @@ LSM9DS1 imu;
 ////////////////////////////
 #define PRINT_CALCULATED
 //#define PRINT_RAW
-#define PRINT_SPEED 250 // 500 ms between prints
+#define PRINT_SPEED 250 // 250 ms between prints
 
 // Earth's magnetic field varies by location. Add or subtract 
 // a declination to get a more accurate heading. Calculate 
