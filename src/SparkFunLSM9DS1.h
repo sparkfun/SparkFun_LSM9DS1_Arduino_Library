@@ -429,7 +429,7 @@ protected:
 	//	- count = Number of registers to be read.
 	// Output: No value is returned by the function, but the registers read are
 	// 		all stored in the *dest array given.
-	void I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t count);
+	uint8_t I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t count);
 };
 
 #endif // SFE_LSM9DS1_H //
