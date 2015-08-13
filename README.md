@@ -1,7 +1,7 @@
 SparkFun LSM9DS1 Arduino Library
 ======================
 
-[![Breakout Board ISO]()](https://www.sparkfun.com/products/13284)
+[![Breakout Board ISO](https://cdn.sparkfun.com//assets/parts/1/0/5/3/3/13284-02.jpg)](https://www.sparkfun.com/products/13284)
 
 _[LSM9DS1 Breakout Board (SEN-13284)](https://www.sparkfun.com/products/13284)_
 
