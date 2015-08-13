@@ -113,14 +113,16 @@ enum interrupt_select
 
 enum interrupt_generators
 {
-	INT_DRDY_XL = (1<<0),	// Valid for INT1 & INT2
-	INT_DRDY_G = (1<<1),	// Valid for INT1 & INT2
-	INT2_DRDY_TEMP = (1<<2),// Replaces INT_BOOT (int1)
-	INT_FTH = (1<<3),		// Valid for INT1 & INT2
-	INT_OVR = (1<<4),		// Valid for INT1 & INT2
-	INT_FSS5 = (1<<5),		// Valid for INT1 & INT2
-	INT1_IG_XL = (1<<6),	// ONLY VALID for INT1
-	INT1_IG_G = (1<<7)		// Replaces INT2_INACT (int2)
+	INT_DRDY_XL = (1<<0),	 // Accelerometer data ready (INT1 & INT2)
+	INT_DRDY_G = (1<<1),	 // Gyroscope data ready (INT1 & INT2)
+	INT1_BOOT = (1<<2),	 // Boot status (INT1)
+	INT2_DRDY_TEMP = (1<<2),// Temp data ready (INT2)
+	INT_FTH = (1<<3),		 // FIFO threshold interrupt (INT1 & INT2)
+	INT_OVR = (1<<4),		 // Overrun interrupt (INT1 & INT2)
+	INT_FSS5 = (1<<5),		 // FSS5 interrupt (INT1 & INT2)
+	INT_IG_XL = (1<<6),	 // Accel interrupt generator (INT1)
+	INT1_IG_G = (1<<7),	 // Gyro interrupt enable (INT1)
+	INT2_INACT = (1<<7),	 // Inactivity interrupt output (INT2)
 };	
 
 enum accel_interrupt_generator

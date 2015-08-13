@@ -95,7 +95,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 	// -1 = bandwidth determined by sample rate
 	// 0 = 408 Hz   2 = 105 Hz
 	// 1 = 211 Hz   3 = 50 Hz
-	settings.accel.bandwidth = 3;
+	settings.accel.bandwidth = -1;
 	settings.accel.highResEnable = false;
 	// accelHighResBandwidth can be any value between 0-3
 	// LP cutoff is set to a factor of sample rate
@@ -169,19 +169,13 @@ uint16_t LSM9DS1::begin()
 	
 	// Gyro initialization stuff:
 	initGyro();	// This will "turn on" the gyro. Setting up interrupts, etc.
-	//setGyroODR(gODR); // Set the gyro output data rate and bandwidth.
-	//setGyroScale(gScale); // Set the gyro range
 	
 	// Accelerometer initialization stuff:
 	initAccel(); // "Turn on" all axes of the accel. Set up interrupts, etc.
-	//setAccelODR(aODR); // Set the accel data rate.
-	//setAccelScale(aScale); // Set the accel range.
 	
 	// Magnetometer initialization stuff:
 	initMag(); // "Turn on" all axes of the mag. Set up interrupts, etc.
-	//setMagODR(mODR); // Set the magnetometer output data rate.
-	//setMagScale(mScale); // Set the magnetometer's range.*/
-	
+
 	// Once everything is initialized, return the WHO_AM_I registers we read:
 	return whoAmICombined;
 }
@@ -718,7 +712,7 @@ void LSM9DS1::setGyroODR(uint8_t gRate)
 
 void LSM9DS1::setAccelODR(uint8_t aRate)
 {
-	// Only do this if gRate is not 0 (which would disable the accel)
+	// Only do this if aRate is not 0 (which would disable the accel)
 	if ((aRate & 0x07) != 0)
 	{
 		// We need to preserve the other bytes in CTRL_REG1_XM. So, first read it:
@@ -796,6 +790,24 @@ void LSM9DS1::configInt(interrupt_select interrupt, uint8_t generator,
 	else temp |= (1<<4);
 	
 	xgWriteByte(CTRL_REG8, temp);
+}
+
+void LSM9DS1::configInactivity(uint8_t duration, uint8_t threshold, bool sleepOn)
+{
+	uint8_t temp = 0;
+	
+	temp = threshold & 0x7F;
+	if (sleepOn) temp |= (1<<7);
+	xgWriteByte(ACT_THS, temp);
+	
+	xgWriteByte(ACT_DUR, duration);
+}
+
+uint8_t LSM9DS1::getInactivity()
+{
+	uint8_t temp = xgReadByte(STATUS_REG_0);
+	temp &= (0x10);
+	return temp;
 }
 
 void LSM9DS1::configAccelInt(uint8_t generator, bool andInterrupts)

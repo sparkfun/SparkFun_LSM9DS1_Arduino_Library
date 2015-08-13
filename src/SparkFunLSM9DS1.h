@@ -217,27 +217,116 @@ public:
 	//	- mRate = The desired output rate of the mag.
 	void setMagODR(uint8_t mRate);
 	
-	//! TODO: Document all of these functions:
+	// configInactivity() -- Configure inactivity interrupt parameters
+	// Input:
+	//	- duration = Inactivity duration - actual value depends on gyro ODR
+	//	- threshold = Activity Threshold
+	//	- sleepOn = Gyroscope operating mode during inactivity.
+	//	  true: gyroscope in sleep mode
+	//	  false: gyroscope in power-down
+	void configInactivity(uint8_t duration, uint8_t threshold, bool sleepOn);
+	
+	// configAccelInt() -- Configure Accelerometer Interrupt Generator
+	// Input:
+	//	- generator = Interrupt axis/high-low events
+	//	  Any OR'd combination of ZHIE_XL, ZLIE_XL, YHIE_XL, YLIE_XL, XHIE_XL, XLIE_XL
+	//	- andInterrupts = AND/OR combination of interrupt events
+	//	  true: AND combination
+	//	  false: OR combination
 	void configAccelInt(uint8_t generator, bool andInterrupts = false);
+	
+	// configAccelThs() -- Configure the threshold of an accelereomter axis
+	// Input:
+	//	- threshold = Interrupt threshold. Possible values: 0-255.
+	//	  Multiply by 128 to get the actual raw accel value.
+	//	- axis = Axis to be configured. Either X_AXIS, Y_AXIS, or Z_AXIS
+	//	- duration = Duration value must be above or below threshold to trigger interrupt
+	//	- wait = Wait function on duration counter
+	//	  true: Wait for duration samples before exiting interrupt
+	//	  false: Wait function off
 	void configAccelThs(uint8_t threshold, lsm9ds1_axis axis, uint8_t duration = 0, bool wait = 0);
 	
+	// configGyroInt() -- Configure Gyroscope Interrupt Generator
+	// Input:
+	//	- generator = Interrupt axis/high-low events
+	//	  Any OR'd combination of ZHIE_G, ZLIE_G, YHIE_G, YLIE_G, XHIE_G, XLIE_G
+	//	- aoi = AND/OR combination of interrupt events
+	//	  true: AND combination
+	//	  false: OR combination
+	//	- latch: latch gyroscope interrupt request.
 	void configGyroInt(uint8_t generator, bool aoi, bool latch);
+	
+	// configGyroThs() -- Configure the threshold of a gyroscope axis
+	// Input:
+	//	- threshold = Interrupt threshold. Possible values: 0-0x7FF.
+	//	  Value is equivalent to raw gyroscope value.
+	//	- axis = Axis to be configured. Either X_AXIS, Y_AXIS, or Z_AXIS
+	//	- duration = Duration value must be above or below threshold to trigger interrupt
+	//	- wait = Wait function on duration counter
+	//	  true: Wait for duration samples before exiting interrupt
+	//	  false: Wait function off
 	void configGyroThs(int16_t threshold, lsm9ds1_axis axis, uint8_t duration, bool wait);
 	
-	void configMagInt(uint8_t generator, h_lactive activeLow, bool latch = true);
-	void configMagThs(uint16_t threshold);
-		
+	// configInt() -- Configure INT1 or INT2 (Gyro and Accel Interrupts only)
+	// Input:
+	//	- interrupt = Select INT1 or INT2
+	//	  Possible values: XG_INT1 or XG_INT2
+	//	- generator = Or'd combination of interrupt generators.
+	//	  Possible values: INT_DRDY_XL, INT_DRDY_G, INT1_BOOT (INT1 only), INT2_DRDY_TEMP (INT2 only)
+	//	  INT_FTH, INT_OVR, INT_FSS5, INT_IG_XL (INT1 only), INT1_IG_G (INT1 only), INT2_INACT (INT2 only)
+	//	- activeLow = Interrupt active configuration
+	//	  Can be either INT_ACTIVE_HIGH or INT_ACTIVE_LOW
+	//	- pushPull =  Push-pull or open drain interrupt configuration
+	//	  Can be either INT_PUSH_PULL or INT_OPEN_DRAIN
 	void configInt(interrupt_select interupt, uint8_t generator,
 				   h_lactive activeLow = INT_ACTIVE_LOW, pp_od pushPull = INT_PUSH_PULL);
-		
+				   
+	// configMagInt() -- Configure Magnetometer Interrupt Generator
+	// Input:
+	//	- generator = Interrupt axis/high-low events
+	//	  Any OR'd combination of ZIEN, YIEN, XIEN
+	//	- activeLow = Interrupt active configuration
+	//	  Can be either INT_ACTIVE_HIGH or INT_ACTIVE_LOW
+	//	- latch: latch gyroscope interrupt request.
+	void configMagInt(uint8_t generator, h_lactive activeLow, bool latch = true);
+	
+	// configMagThs() -- Configure the threshold of a gyroscope axis
+	// Input:
+	//	- threshold = Interrupt threshold. Possible values: 0-0x7FF.
+	//	  Value is equivalent to raw magnetometer value.
+	void configMagThs(uint16_t threshold);
+	
+	// getGyroIntSrc() -- Get contents of Gyroscope interrupt source register
 	uint8_t getGyroIntSrc();
+	
+	// getGyroIntSrc() -- Get contents of accelerometer interrupt source register
 	uint8_t getAccelIntSrc();
+	
+	// getGyroIntSrc() -- Get contents of magnetometer interrupt source register
 	uint8_t getMagIntSrc();
 	
+	// getGyroIntSrc() -- Get status of inactivity interrupt
+	uint8_t getInactivity();
+	
+	// sleepGyro() -- Sleep or wake the gyroscope
+	// Input:
+	//	- enable: True = sleep gyro. False = wake gyro.
 	void sleepGyro(bool enable = true);
 	
+	// enableFIFO() - Enable or disable the FIFO
+	// Input:
+	//	- enable: true = enable, false = disable.
 	void enableFIFO(bool enable = true);
+	
+	// setFIFO() - Configure FIFO mode and Threshold
+	// Input:
+	//	- fifoMode: Set FIFO mode to off, FIFO (stop when full), continuous, bypass
+	//	  Possible inputs: FIFO_OFF, FIFO_THS, FIFO_CONT_TRIGGER, FIFO_OFF_TRIGGER, FIFO_CONT
+	//	- fifoThs: FIFO threshold level setting
+	//	  Any value from 0-0x1F is acceptable.
 	void setFIFO(fifoMode_type fifoMode, uint8_t fifoThs);
+	
+	// getFIFOSamples() - Get number of FIFO samples
 	uint8_t getFIFOSamples();
 		
 
