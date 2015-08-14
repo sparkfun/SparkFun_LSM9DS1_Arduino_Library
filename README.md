@@ -30,7 +30,7 @@ Products that use this Library
 Version History
 ---------------
 
-* [TODO](TODO) - Description
+* [V 1.0.0](https://github.com/sparkfun/SparkFun_LSM9DS1_Arduino_Library/releases/tag/V_1.0.0) - Initial release
 
 License Information
 -------------------
