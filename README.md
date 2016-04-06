@@ -20,7 +20,7 @@ Documentation
 
 * **[Installing an Arduino Library Guide](https://learn.sparkfun.com/tutorials/installing-an-arduino-library)** - Basic information on how to install an Arduino library.
 * **[Product Repository](https://github.com/sparkfun/LSM9DS1_Breakout)** - Main repository (including hardware files) for the LSM9DS1 Breakout.
-* **[Hookup Guide](https://learn.sparkfun.com/tutorials/LSM9DS1-hookup-guide)** - Basic hookup guide for the LSM9DS1 Breakout.
+* **[LSM9DS1 Breakout Hookup Guide](https://learn.sparkfun.com/tutorials/lsm9ds1-breakout-hookup-guide)** - Basic hookup guide for the LSM9DS1 Breakout.
 
 Products that use this Library
 ---------------------------------
