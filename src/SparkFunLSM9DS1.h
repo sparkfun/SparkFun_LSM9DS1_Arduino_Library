@@ -93,7 +93,7 @@ public:
 	//			0 - No new data available
 	uint8_t gyroAvailable();
 	
-	// gyroAvailable() -- Polls the temperature status register to check
+	// tempAvailable() -- Polls the temperature status register to check
 	// if new data is available.
 	// Output:	1 - New data available
 	//			0 - No new data available
