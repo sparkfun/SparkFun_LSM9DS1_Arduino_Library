@@ -99,7 +99,7 @@ Distributed as-is; no warranty is given.
 #define OUT_Z_L_M			0x2C
 #define OUT_Z_H_M			0x2D
 #define INT_CFG_M			0x30
-#define INT_SRC_M			0x30
+#define INT_SRC_M			0x31
 #define INT_THS_L_M			0x32
 #define INT_THS_H_M			0x33
 
