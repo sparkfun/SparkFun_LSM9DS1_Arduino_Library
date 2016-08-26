@@ -742,7 +742,21 @@ void LSM9DS1::setMagODR(uint8_t mRate)
 
 void LSM9DS1::calcgRes()
 {
-	gRes = ((float) settings.gyro.scale) / 32768.0;
+	//gRes = ((float) settings.gyro.scale) / 32768.0;
+	
+	//Values corrected per datasheet (P.12 Table 3)
+	switch (settings.gyro.scale)
+	{
+	case 245:
+		gRes = 0.00875; //8.75 mdps/LSB
+		break;
+	case 500:
+		gRes = 0.01750; //17.5 mdps/LSB
+		break;
+	case 2000:
+		gRes = 0.07000; //70 mdps/LSB
+		break;
+	}
 }
 
 void LSM9DS1::calcaRes()
