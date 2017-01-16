@@ -35,7 +35,20 @@ Distributed as-is; no warranty is given.
 
 #define LSM9DS1_COMMUNICATION_TIMEOUT 1000
 
-float magSensitivity[4] = {0.00014, 0.00029, 0.00043, 0.00058};
+// Sensor Sensitivity Constants
+// Values set according to the typical specifications provided in
+// table 3 of the LSM9DS1 datasheet. (pg 12)
+#define SENSITIVITY_ACCELEROMETER_2  0.000061
+#define SENSITIVITY_ACCELEROMETER_4  0.000122
+#define SENSITIVITY_ACCELEROMETER_8  0.000244
+#define SENSITIVITY_ACCELEROMETER_16 0.000732
+#define SENSITIVITY_GYROSCOPE_245    0.00875
+#define SENSITIVITY_GYROSCOPE_500    0.0175
+#define SENSITIVITY_GYROSCOPE_2000   0.07
+#define SENSITIVITY_MAGNETOMETER_4   0.00014
+#define SENSITIVITY_MAGNETOMETER_8   0.00029
+#define SENSITIVITY_MAGNETOMETER_12  0.00043
+#define SENSITIVITY_MAGNETOMETER_16  0.00058
 
 LSM9DS1::LSM9DS1()
 {
@@ -742,33 +755,60 @@ void LSM9DS1::setMagODR(uint8_t mRate)
 
 void LSM9DS1::calcgRes()
 {
-	gRes = ((float) settings.gyro.scale) / 32768.0;
+	switch (settings.gyro.scale)
+	{
+	case 245:
+		gRes = SENSITIVITY_GYROSCOPE_245;
+		break;
+	case 500:
+		gRes = SENSITIVITY_GYROSCOPE_500;
+		break;
+	case 2000:
+		gRes = SENSITIVITY_GYROSCOPE_2000;
+		break;
+	default:
+		break;
+	}
 }
 
 void LSM9DS1::calcaRes()
 {
-	aRes = ((float) settings.accel.scale) / 32768.0;
+	switch (settings.accel.scale)
+	{
+	case 2:
+		aRes = SENSITIVITY_ACCELEROMETER_2;
+		break;
+	case 4:
+		aRes = SENSITIVITY_ACCELEROMETER_4;
+		break;
+	case 8:
+		aRes = SENSITIVITY_ACCELEROMETER_8;
+		break;
+	case 16:
+		aRes = SENSITIVITY_ACCELEROMETER_16;
+		break;
+	default:
+		break;
+	}
 }
 
 void LSM9DS1::calcmRes()
 {
-	//mRes = ((float) settings.mag.scale) / 32768.0;
 	switch (settings.mag.scale)
 	{
 	case 4:
-		mRes = magSensitivity[0];
+		mRes = SENSITIVITY_MAGNETOMETER_4;
 		break;
 	case 8:
-		mRes = magSensitivity[1];
+		mRes = SENSITIVITY_MAGNETOMETER_8;
 		break;
 	case 12:
-		mRes = magSensitivity[2];
+		mRes = SENSITIVITY_MAGNETOMETER_12;
 		break;
 	case 16:
-		mRes = magSensitivity[3];
+		mRes = SENSITIVITY_MAGNETOMETER_16;
 		break;
-	}
-	
+	}	
 }
 
 void LSM9DS1::configInt(interrupt_select interrupt, uint8_t generator,
