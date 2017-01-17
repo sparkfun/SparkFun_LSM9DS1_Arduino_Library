@@ -76,6 +76,7 @@ LSM9DS1 imu;
 #define PRINT_CALCULATED
 //#define PRINT_RAW
 #define PRINT_SPEED 250 // 250 ms between prints
+static unsigned long lastPrint = 0; // Keep track of print time
 
 // Earth's magnetic field varies by location. Add or subtract 
 // a declination to get a more accurate heading. Calculate 
@@ -112,27 +113,48 @@ void setup()
 
 void loop()
 {
-  printGyro();  // Print "G: gx, gy, gz"
-  printAccel(); // Print "A: ax, ay, az"
-  printMag();   // Print "M: mx, my, mz"
+  // Update the sensor values whenever new data is available
+  if ( imu.gyroAvailable() )
+  {
+    // To read from the gyroscope,  first call the
+    // readGyro() function. When it exits, it'll update the
+    // gx, gy, and gz variables with the most current data.
+    imu.readGyro();
+  }
+  if ( imu.accelAvailable() )
+  {
+    // To read from the accelerometer, first call the
+    // readAccel() function. When it exits, it'll update the
+    // ax, ay, and az variables with the most current data.
+    imu.readAccel();
+  }
+  if ( imu.magAvailable() )
+  {
+    // To read from the magnetometer, first call the
+    // readMag() function. When it exits, it'll update the
+    // mx, my, and mz variables with the most current data.
+    imu.readMag();
+  }
   
-  // Print the heading and orientation for fun!
-  // Call print attitude. The LSM9DS1's magnetometer x and y
-  // axes are opposite to the accelerometer, so my and mx are
-  // substituted for each other.
-  printAttitude(imu.ax, imu.ay, imu.az, -imu.my, -imu.mx, imu.mz);
-  Serial.println();
-  
-  delay(PRINT_SPEED);
+  if ((lastPrint + PRINT_SPEED) < millis())
+  {
+    printGyro();  // Print "G: gx, gy, gz"
+    printAccel(); // Print "A: ax, ay, az"
+    printMag();   // Print "M: mx, my, mz"
+    // Print the heading and orientation for fun!
+    // Call print attitude. The LSM9DS1's mag x and y
+    // axes are opposite to the accelerometer, so my, mx are
+    // substituted for each other.
+    printAttitude(imu.ax, imu.ay, imu.az, 
+                 -imu.my, -imu.mx, imu.mz);
+    Serial.println();
+    
+    lastPrint = millis(); // Update lastPrint time
+  }
 }
 
 void printGyro()
 {
-  // To read from the gyroscope, you must first call the
-  // readGyro() function. When this exits, it'll update the
-  // gx, gy, and gz variables with the most current data.
-  imu.readGyro();
-  
   // Now we can use the gx, gy, and gz variables as we please.
   // Either print them as raw ADC values, or calculated in DPS.
   Serial.print("G: ");
@@ -156,12 +178,7 @@ void printGyro()
 }
 
 void printAccel()
-{
-  // To read from the accelerometer, you must first call the
-  // readAccel() function. When this exits, it'll update the
-  // ax, ay, and az variables with the most current data.
-  imu.readAccel();
-  
+{  
   // Now we can use the ax, ay, and az variables as we please.
   // Either print them as raw ADC values, or calculated in g's.
   Serial.print("A: ");
@@ -186,12 +203,7 @@ void printAccel()
 }
 
 void printMag()
-{
-  // To read from the magnetometer, you must first call the
-  // readMag() function. When this exits, it'll update the
-  // mx, my, and mz variables with the most current data.
-  imu.readMag();
-  
+{  
   // Now we can use the mx, my, and mz variables as we please.
   // Either print them as raw ADC values, or calculated in Gauss.
   Serial.print("M: ");
