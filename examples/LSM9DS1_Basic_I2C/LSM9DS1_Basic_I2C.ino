@@ -238,7 +238,7 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
   
   float heading;
   if (my == 0)
-    heading = (mx < 0) ? 180.0 : 0;
+    heading = (mx < 0) ? PI : 0;
   else
     heading = atan2(mx, my);
     
