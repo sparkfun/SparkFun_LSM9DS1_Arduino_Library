@@ -116,13 +116,13 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 
 	settings.mag.enabled = true;
 	// mag scale can be 4, 8, 12, or 16
-	settings.mag.scale = 12;
+	settings.mag.scale = 4;
 	// mag data rate can be 0-7
 	// 0 = 0.625 Hz  4 = 10 Hz
 	// 1 = 1.25 Hz   5 = 20 Hz
 	// 2 = 2.5 Hz    6 = 40 Hz
 	// 3 = 5 Hz      7 = 80 Hz
-	settings.mag.sampleRate = 5;
+	settings.mag.sampleRate = 7;
 	settings.mag.tempCompensationEnable = false;
 	// magPerformance can be any value between 0-3
 	// 0 = Low power mode      2 = high performance
