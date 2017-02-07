@@ -4,7 +4,7 @@
   SparkFun 9DOF stick Magnetometer which can be used for
   calibration.
   By: Thomas Horning
-***This Code is Open. It is free to be used and altered***
+***This Code is 100% open source. It is free to be used and altered***
   ////////////////////////////////////////////////
   Steps:
   1. Upload code to Arduino with connected SparkFun
