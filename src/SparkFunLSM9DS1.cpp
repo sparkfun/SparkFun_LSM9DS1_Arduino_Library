@@ -33,9 +33,20 @@ Distributed as-is; no warranty is given.
   #include "WProgram.h"
 #endif
 
-#define LSM9DS1_COMMUNICATION_TIMEOUT 1000
-
-float magSensitivity[4] = {0.00014, 0.00029, 0.00043, 0.00058};
+// Sensor Sensitivity Constants
+// Values set according to the typical specifications provided in
+// table 3 of the LSM9DS1 datasheet. (pg 12)
+#define SENSITIVITY_ACCELEROMETER_2  0.000061
+#define SENSITIVITY_ACCELEROMETER_4  0.000122
+#define SENSITIVITY_ACCELEROMETER_8  0.000244
+#define SENSITIVITY_ACCELEROMETER_16 0.000732
+#define SENSITIVITY_GYROSCOPE_245    0.00875
+#define SENSITIVITY_GYROSCOPE_500    0.0175
+#define SENSITIVITY_GYROSCOPE_2000   0.07
+#define SENSITIVITY_MAGNETOMETER_4   0.00014
+#define SENSITIVITY_MAGNETOMETER_8   0.00029
+#define SENSITIVITY_MAGNETOMETER_12  0.00043
+#define SENSITIVITY_MAGNETOMETER_16  0.00058
 
 LSM9DS1::LSM9DS1()
 {
@@ -505,15 +516,17 @@ uint8_t LSM9DS1::magAvailable(lsm9ds1_axis axis)
 void LSM9DS1::readAccel()
 {
 	uint8_t temp[6]; // We'll read six bytes from the accelerometer into temp	
-	xgReadBytes(OUT_X_L_XL, temp, 6); // Read 6 bytes, beginning at OUT_X_L_XL
-	ax = (temp[1] << 8) | temp[0]; // Store x-axis values into ax
-	ay = (temp[3] << 8) | temp[2]; // Store y-axis values into ay
-	az = (temp[5] << 8) | temp[4]; // Store z-axis values into az
-	if (_autoCalc)
+	if ( xgReadBytes(OUT_X_L_XL, temp, 6) == 6 ) // Read 6 bytes, beginning at OUT_X_L_XL
 	{
-		ax -= aBiasRaw[X_AXIS];
-		ay -= aBiasRaw[Y_AXIS];
-		az -= aBiasRaw[Z_AXIS];
+		ax = (temp[1] << 8) | temp[0]; // Store x-axis values into ax
+		ay = (temp[3] << 8) | temp[2]; // Store y-axis values into ay
+		az = (temp[5] << 8) | temp[4]; // Store z-axis values into az
+		if (_autoCalc)
+		{
+			ax -= aBiasRaw[X_AXIS];
+			ay -= aBiasRaw[Y_AXIS];
+			az -= aBiasRaw[Z_AXIS];
+		}
 	}
 }
 
@@ -521,50 +534,62 @@ int16_t LSM9DS1::readAccel(lsm9ds1_axis axis)
 {
 	uint8_t temp[2];
 	int16_t value;
-	xgReadBytes(OUT_X_L_XL + (2 * axis), temp, 2);
-	value = (temp[1] << 8) | temp[0];
-	
-	if (_autoCalc)
-		value -= aBiasRaw[axis];
-	
-	return value;
+	if ( xgReadBytes(OUT_X_L_XL + (2 * axis), temp, 2) == 2)
+	{
+		value = (temp[1] << 8) | temp[0];
+		
+		if (_autoCalc)
+			value -= aBiasRaw[axis];
+		
+		return value;
+	}
+	return 0;
 }
 
 void LSM9DS1::readMag()
 {
 	uint8_t temp[6]; // We'll read six bytes from the mag into temp	
-	mReadBytes(OUT_X_L_M, temp, 6); // Read 6 bytes, beginning at OUT_X_L_M
-	mx = (temp[1] << 8) | temp[0]; // Store x-axis values into mx
-	my = (temp[3] << 8) | temp[2]; // Store y-axis values into my
-	mz = (temp[5] << 8) | temp[4]; // Store z-axis values into mz
+	if ( mReadBytes(OUT_X_L_M, temp, 6) == 6) // Read 6 bytes, beginning at OUT_X_L_M
+	{
+		mx = (temp[1] << 8) | temp[0]; // Store x-axis values into mx
+		my = (temp[3] << 8) | temp[2]; // Store y-axis values into my
+		mz = (temp[5] << 8) | temp[4]; // Store z-axis values into mz
+	}
 }
 
 int16_t LSM9DS1::readMag(lsm9ds1_axis axis)
 {
 	uint8_t temp[2];
-	mReadBytes(OUT_X_L_M + (2 * axis), temp, 2);
-	return (temp[1] << 8) | temp[0];
+	if ( mReadBytes(OUT_X_L_M + (2 * axis), temp, 2) == 2)
+	{
+		return (temp[1] << 8) | temp[0];
+	}
+	return 0;
 }
 
 void LSM9DS1::readTemp()
 {
 	uint8_t temp[2]; // We'll read two bytes from the temperature sensor into temp	
-	xgReadBytes(OUT_TEMP_L, temp, 2); // Read 2 bytes, beginning at OUT_TEMP_L
-	temperature = ((int16_t)temp[1] << 8) | temp[0];
+	if ( xgReadBytes(OUT_TEMP_L, temp, 2) == 2 ) // Read 2 bytes, beginning at OUT_TEMP_L
+	{
+		temperature = ((int16_t)temp[1] << 8) | temp[0];
+	}
 }
 
 void LSM9DS1::readGyro()
 {
 	uint8_t temp[6]; // We'll read six bytes from the gyro into temp
-	xgReadBytes(OUT_X_L_G, temp, 6); // Read 6 bytes, beginning at OUT_X_L_G
-	gx = (temp[1] << 8) | temp[0]; // Store x-axis values into gx
-	gy = (temp[3] << 8) | temp[2]; // Store y-axis values into gy
-	gz = (temp[5] << 8) | temp[4]; // Store z-axis values into gz
-	if (_autoCalc)
+	if ( xgReadBytes(OUT_X_L_G, temp, 6) == 6) // Read 6 bytes, beginning at OUT_X_L_G
 	{
-		gx -= gBiasRaw[X_AXIS];
-		gy -= gBiasRaw[Y_AXIS];
-		gz -= gBiasRaw[Z_AXIS];
+		gx = (temp[1] << 8) | temp[0]; // Store x-axis values into gx
+		gy = (temp[3] << 8) | temp[2]; // Store y-axis values into gy
+		gz = (temp[5] << 8) | temp[4]; // Store z-axis values into gz
+		if (_autoCalc)
+		{
+			gx -= gBiasRaw[X_AXIS];
+			gy -= gBiasRaw[Y_AXIS];
+			gz -= gBiasRaw[Z_AXIS];
+		}
 	}
 }
 
@@ -573,14 +598,16 @@ int16_t LSM9DS1::readGyro(lsm9ds1_axis axis)
 	uint8_t temp[2];
 	int16_t value;
 	
-	xgReadBytes(OUT_X_L_G + (2 * axis), temp, 2);
-	
-	value = (temp[1] << 8) | temp[0];
-	
-	if (_autoCalc)
-		value -= gBiasRaw[axis];
-	
-	return value;
+	if ( xgReadBytes(OUT_X_L_G + (2 * axis), temp, 2) == 2)
+	{
+		value = (temp[1] << 8) | temp[0];
+		
+		if (_autoCalc)
+			value -= gBiasRaw[axis];
+		
+		return value;
+	}
+	return 0;
 }
 
 float LSM9DS1::calcGyro(int16_t gyro)
@@ -742,33 +769,60 @@ void LSM9DS1::setMagODR(uint8_t mRate)
 
 void LSM9DS1::calcgRes()
 {
-	gRes = ((float) settings.gyro.scale) / 32768.0;
+	switch (settings.gyro.scale)
+	{
+	case 245:
+		gRes = SENSITIVITY_GYROSCOPE_245;
+		break;
+	case 500:
+		gRes = SENSITIVITY_GYROSCOPE_500;
+		break;
+	case 2000:
+		gRes = SENSITIVITY_GYROSCOPE_2000;
+		break;
+	default:
+		break;
+	}
 }
 
 void LSM9DS1::calcaRes()
 {
-	aRes = ((float) settings.accel.scale) / 32768.0;
+	switch (settings.accel.scale)
+	{
+	case 2:
+		aRes = SENSITIVITY_ACCELEROMETER_2;
+		break;
+	case 4:
+		aRes = SENSITIVITY_ACCELEROMETER_4;
+		break;
+	case 8:
+		aRes = SENSITIVITY_ACCELEROMETER_8;
+		break;
+	case 16:
+		aRes = SENSITIVITY_ACCELEROMETER_16;
+		break;
+	default:
+		break;
+	}
 }
 
 void LSM9DS1::calcmRes()
 {
-	//mRes = ((float) settings.mag.scale) / 32768.0;
 	switch (settings.mag.scale)
 	{
 	case 4:
-		mRes = magSensitivity[0];
+		mRes = SENSITIVITY_MAGNETOMETER_4;
 		break;
 	case 8:
-		mRes = magSensitivity[1];
+		mRes = SENSITIVITY_MAGNETOMETER_8;
 		break;
 	case 12:
-		mRes = magSensitivity[2];
+		mRes = SENSITIVITY_MAGNETOMETER_12;
 		break;
 	case 16:
-		mRes = magSensitivity[3];
+		mRes = SENSITIVITY_MAGNETOMETER_16;
 		break;
-	}
-	
+	}	
 }
 
 void LSM9DS1::configInt(interrupt_select interrupt, uint8_t generator,
@@ -1000,14 +1054,14 @@ uint8_t LSM9DS1::xgReadByte(uint8_t subAddress)
 		return SPIreadByte(_xgAddress, subAddress);
 }
 
-void LSM9DS1::xgReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
+uint8_t LSM9DS1::xgReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 {
 	// Whether we're using I2C or SPI, read multiple bytes using the
 	// gyro-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		I2CreadBytes(_xgAddress, subAddress, dest, count);
+		return I2CreadBytes(_xgAddress, subAddress, dest, count);
 	else if (settings.device.commInterface == IMU_MODE_SPI)
-		SPIreadBytes(_xgAddress, subAddress, dest, count);
+		return SPIreadBytes(_xgAddress, subAddress, dest, count);
 }
 
 uint8_t LSM9DS1::mReadByte(uint8_t subAddress)
@@ -1020,14 +1074,14 @@ uint8_t LSM9DS1::mReadByte(uint8_t subAddress)
 		return SPIreadByte(_mAddress, subAddress);
 }
 
-void LSM9DS1::mReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
+uint8_t LSM9DS1::mReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 {
 	// Whether we're using I2C or SPI, read multiple bytes using the
 	// accelerometer-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		I2CreadBytes(_mAddress, subAddress, dest, count);
+		return I2CreadBytes(_mAddress, subAddress, dest, count);
 	else if (settings.device.commInterface == IMU_MODE_SPI)
-		SPIreadBytes(_mAddress, subAddress, dest, count);
+		return SPIreadBytes(_mAddress, subAddress, dest, count);
 }
 
 void LSM9DS1::initSPI()
@@ -1068,7 +1122,7 @@ uint8_t LSM9DS1::SPIreadByte(uint8_t csPin, uint8_t subAddress)
 	return temp;
 }
 
-void LSM9DS1::SPIreadBytes(uint8_t csPin, uint8_t subAddress,
+uint8_t LSM9DS1::SPIreadBytes(uint8_t csPin, uint8_t subAddress,
 							uint8_t * dest, uint8_t count)
 {
 	// To indicate a read, set bit 0 (msb) of first byte to 1
@@ -1085,6 +1139,8 @@ void LSM9DS1::SPIreadBytes(uint8_t csPin, uint8_t subAddress,
 		dest[i] = SPI.transfer(0x00); // Read into destination array
 	}
 	digitalWrite(csPin, HIGH); // Close communication
+	
+	return count;
 }
 
 void LSM9DS1::initI2C()
@@ -1103,44 +1159,33 @@ void LSM9DS1::I2CwriteByte(uint8_t address, uint8_t subAddress, uint8_t data)
 
 uint8_t LSM9DS1::I2CreadByte(uint8_t address, uint8_t subAddress)
 {
-	int timeout = LSM9DS1_COMMUNICATION_TIMEOUT;
 	uint8_t data; // `data` will store the register data	
 	
 	Wire.beginTransmission(address);         // Initialize the Tx buffer
 	Wire.write(subAddress);	                 // Put slave register address in Tx buffer
-	Wire.endTransmission(true);             // Send the Tx buffer, but send a restart to keep connection alive
+	Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
 	Wire.requestFrom(address, (uint8_t) 1);  // Read one byte from slave register address 
-	while ((Wire.available() < 1) && (timeout-- > 0))
-		delay(1);
-	
-	if (timeout <= 0)
-		return 255;	//! Bad! 255 will be misinterpreted as a good value.
 	
 	data = Wire.read();                      // Fill Rx buffer with result
 	return data;                             // Return data read from slave register
 }
 
 uint8_t LSM9DS1::I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t count)
-{  
-	int timeout = LSM9DS1_COMMUNICATION_TIMEOUT;
-	Wire.beginTransmission(address);   // Initialize the Tx buffer
+{
+	byte retVal;
+	Wire.beginTransmission(address);      // Initialize the Tx buffer
 	// Next send the register to be read. OR with 0x80 to indicate multi-read.
-	Wire.write(subAddress | 0x80);     // Put slave register address in Tx buffer
-
-	Wire.endTransmission(true);             // Send the Tx buffer, but send a restart to keep connection alive
-	uint8_t i = 0;
-	Wire.requestFrom(address, count);  // Read bytes from slave register address 
-	while ((Wire.available() < count) && (timeout-- > 0))
-		delay(1);
-	if (timeout <= 0)
-		return -1;
+	Wire.write(subAddress | 0x80);        // Put slave register address in Tx buffer
+	retVal = Wire.endTransmission(false); // Send Tx buffer, send a restart to keep connection alive
+	if (retVal != 0) // endTransmission should return 0 on success
+		return 0;
+	
+	retVal = Wire.requestFrom(address, count);  // Read bytes from slave register address 
+	if (retVal != count)
+		return 0;
 	
 	for (int i=0; i<count;)
-	{
-		if (Wire.available())
-		{
-			dest[i++] = Wire.read();
-		}
-	}
+		dest[i++] = Wire.read();
+	
 	return count;
 }
