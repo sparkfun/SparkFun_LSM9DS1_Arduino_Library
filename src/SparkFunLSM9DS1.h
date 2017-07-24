@@ -33,7 +33,7 @@ Distributed as-is; no warranty is given.
 #include "LSM9DS1_Types.h"
 
 #define LSM9DS1_AG_ADDR(sa0)	((sa0) == 0 ? 0x6A : 0x6B)
-#define LSM9DS1_M_ADDR(sa1)		((sa1) == 0 ? 0x1C : 0x1E)
+#define LSM9DS1_M_ADDR(sa1)		((sa1) == 0 ? 0x1C : 0x3C)
 
 enum lsm9ds1_axis {
 	X_AXIS,
