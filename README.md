@@ -29,7 +29,7 @@ Documentation
 
 Products that use this Library
 ---------------------------------
-* [SparkFun 9DoF Sensor Stick (SEN)-13944](https://www.sparkfun.com/products/13944) - LSM9DS1 Sensor Stick (smaller board but less pinouts compared to the breakout board) 
+* [SparkFun 9DoF Sensor Stick (SEN-13944)](https://www.sparkfun.com/products/13944) - LSM9DS1 Sensor Stick (smaller board but less pinouts compared to the breakout board) 
 * [SparkFun 9DoF IMU Breakout - LSM9DS1 (SEN-13284)](https://www.sparkfun.com/products/13284) - LSM9DS1 Breakout board.
 
 Version History
