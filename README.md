@@ -19,9 +19,13 @@ Documentation
 --------------
 
 * **[Installing an Arduino Library Guide](https://learn.sparkfun.com/tutorials/installing-an-arduino-library)** - Basic information on how to install an Arduino library.
-* **[Product Repository](https://github.com/sparkfun/LSM9DS1_Breakout)** - Main repository (including hardware files) for the LSM9DS1 Breakout.
-* **[9DoF Sensor Stick Hookup Guide](https://learn.sparkfun.com/tutorials/9dof-sensor-stick-hookup-guide)** - Basic hookup guide for the 9DoF Sensor Stick.
-* **[LSM9DS1 Breakout Hookup Guide](https://learn.sparkfun.com/tutorials/lsm9ds1-breakout-hookup-guide)** - Basic hookup guide for the LSM9DS1 Breakout.
+* **9DoF Sensor Stick**
+  * **[Hookup Guide](https://learn.sparkfun.com/tutorials/9dof-sensor-stick-hookup-guide)** - Basic hookup guide for the 9DoF Sensor Stick.
+  * **[Product Repository](https://github.com/sparkfun/9DOF_Sensor_Stick)** - Main repository (including hardware files) for the 9DoF sensor stick.
+* **LSM9DS1 Breakout** 
+  * **[Hookup Guide](https://learn.sparkfun.com/tutorials/lsm9ds1-breakout-hookup-guide)** - Basic hookup guide for the LSM9DS1 Breakout.
+  * **[Product Repository](https://github.com/sparkfun/LSM9DS1_Breakout)** - Main repository (including hardware files) for the LSM9DS1 Breakout.
+
 
 Products that use this Library
 ---------------------------------
