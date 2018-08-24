@@ -246,7 +246,6 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
   
   if (heading > PI) heading -= (2 * PI);
   else if (heading < -PI) heading += (2 * PI);
-  else if (heading < 0) heading += 2 * PI;
   
   // Convert everything from radians to degrees:
   heading *= 180.0 / PI;
