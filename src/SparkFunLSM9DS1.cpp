@@ -572,7 +572,7 @@ void LSM9DS1::readTemp()
 	uint8_t temp[2]; // We'll read two bytes from the temperature sensor into temp	
 	if ( xgReadBytes(OUT_TEMP_L, temp, 2) == 2 ) // Read 2 bytes, beginning at OUT_TEMP_L
 	{
-		int16_t offset = 25  // Per datasheet sensor outputs 0 typically @ 25 degrees centigrade
+		int16_t offset = 25;  // Per datasheet sensor outputs 0 typically @ 25 degrees centigrade
 		temperature = offset + ((((int16_t)temp[1] << 8) | temp[0]) >> 8) ;
 	}
 }
@@ -1053,6 +1053,7 @@ uint8_t LSM9DS1::xgReadByte(uint8_t subAddress)
 		return I2CreadByte(_xgAddress, subAddress);
 	else if (settings.device.commInterface == IMU_MODE_SPI)
 		return SPIreadByte(_xgAddress, subAddress);
+	return -1;
 }
 
 uint8_t LSM9DS1::xgReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
@@ -1063,6 +1064,7 @@ uint8_t LSM9DS1::xgReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 		return I2CreadBytes(_xgAddress, subAddress, dest, count);
 	else if (settings.device.commInterface == IMU_MODE_SPI)
 		return SPIreadBytes(_xgAddress, subAddress, dest, count);
+	return -1;
 }
 
 uint8_t LSM9DS1::mReadByte(uint8_t subAddress)
@@ -1073,6 +1075,7 @@ uint8_t LSM9DS1::mReadByte(uint8_t subAddress)
 		return I2CreadByte(_mAddress, subAddress);
 	else if (settings.device.commInterface == IMU_MODE_SPI)
 		return SPIreadByte(_mAddress, subAddress);
+	return -1;
 }
 
 uint8_t LSM9DS1::mReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
@@ -1083,6 +1086,7 @@ uint8_t LSM9DS1::mReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 		return I2CreadBytes(_mAddress, subAddress, dest, count);
 	else if (settings.device.commInterface == IMU_MODE_SPI)
 		return SPIreadBytes(_mAddress, subAddress, dest, count);
+	return -1;
 }
 
 void LSM9DS1::initSPI()
