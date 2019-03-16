@@ -573,7 +573,7 @@ void LSM9DS1::readTemp()
 	if ( xgReadBytes(OUT_TEMP_L, temp, 2) == 2 ) // Read 2 bytes, beginning at OUT_TEMP_L
 	{
 		int16_t offset = 25;  // Per datasheet sensor outputs 0 typically @ 25 degrees centigrade
-		temperature = offset + ((((int16_t)temp[1] << 8) | temp[0]) >> 8) ;
+		temperature = offset + ( (((int16_t)temp[1] << 8) | (int16_t)temp[0]) >> 4 );
 	}
 }
 
