@@ -79,6 +79,9 @@ const int RDYM_PIN = 6;  // RDY pin to D6
 // Variable to keep track of when we print sensor readings:
 unsigned long lastPrint = 0;
 
+//Function Definitions
+void printStats();
+
 // configureIMU sets up our LSM9DS1 interface, sensor scales
 // and sample rates.
 uint16_t configureIMU()
