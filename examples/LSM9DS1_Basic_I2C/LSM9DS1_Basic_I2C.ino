@@ -84,6 +84,12 @@ static unsigned long lastPrint = 0; // Keep track of print time
 // http://www.ngdc.noaa.gov/geomag-web/#declination
 #define DECLINATION -8.58 // Declination (degrees) in Boulder, CO.
 
+//Function definitions
+void printGyro();  
+void printAccel(); 
+void printMag();   
+void printAttitude(float ax, float ay, float az, float mx, float my, float mz);
+
 void setup() 
 {
   

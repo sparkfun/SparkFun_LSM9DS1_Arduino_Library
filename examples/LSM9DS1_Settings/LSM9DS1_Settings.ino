@@ -60,6 +60,9 @@ unsigned int tempReadCounter = 0;
 unsigned long lastPrint = 0;
 const unsigned int PRINT_RATE = 500;
 
+//Function definitions
+void printSensorReadings();
+
 void setupDevice()
 {
   // [commInterface] determines whether we'll use I2C or SPI
