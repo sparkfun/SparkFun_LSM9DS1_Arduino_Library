@@ -63,6 +63,7 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 	settings.device.commInterface = interface;
 	settings.device.agAddress = xgAddr;
 	settings.device.mAddress = mAddr;
+  settings.device.i2c = &Wire;
 
 	settings.gyro.enabled = true;
 	settings.gyro.enableX = true;
@@ -335,8 +336,7 @@ void LSM9DS1::initAccel()
 // remove errors due to imprecise or varying initial placement. Calibration of sensor data in this manner
 // is good practice.
 void LSM9DS1::calibrate(bool autoCalc)
-{  
-	uint8_t data[6] = {0, 0, 0, 0, 0, 0};
+{
 	uint8_t samples = 0;
 	int ii;
 	int32_t aBiasRawTemp[3] = {0, 0, 0};
@@ -1150,47 +1150,47 @@ uint8_t LSM9DS1::SPIreadBytes(uint8_t csPin, uint8_t subAddress,
 
 void LSM9DS1::initI2C()
 {
-	Wire.begin();	// Initialize I2C library
+	settings.device.i2c->begin();	// Initialize I2C library
 }
 
 // Wire.h read and write protocols
 void LSM9DS1::I2CwriteByte(uint8_t address, uint8_t subAddress, uint8_t data)
 {
-	Wire.beginTransmission(address);  // Initialize the Tx buffer
-	Wire.write(subAddress);           // Put slave register address in Tx buffer
-	Wire.write(data);                 // Put data in Tx buffer
-	Wire.endTransmission();           // Send the Tx buffer
+	settings.device.i2c->beginTransmission(address);  // Initialize the Tx buffer
+	settings.device.i2c->write(subAddress);           // Put slave register address in Tx buffer
+	settings.device.i2c->write(data);                 // Put data in Tx buffer
+	settings.device.i2c->endTransmission();           // Send the Tx buffer
 }
 
 uint8_t LSM9DS1::I2CreadByte(uint8_t address, uint8_t subAddress)
 {
-	uint8_t data; // `data` will store the register data	
-	
-	Wire.beginTransmission(address);         // Initialize the Tx buffer
-	Wire.write(subAddress);	                 // Put slave register address in Tx buffer
-	Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
-	Wire.requestFrom(address, (uint8_t) 1);  // Read one byte from slave register address 
-	
-	data = Wire.read();                      // Fill Rx buffer with result
+	uint8_t data; // `data` will store the register data
+
+	settings.device.i2c->beginTransmission(address);         // Initialize the Tx buffer
+	settings.device.i2c->write(subAddress);	                 // Put slave register address in Tx buffer
+	settings.device.i2c->endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+	settings.device.i2c->requestFrom(address, (uint8_t) 1);  // Read one byte from slave register address
+
+	data = settings.device.i2c->read();                      // Fill Rx buffer with result
 	return data;                             // Return data read from slave register
 }
 
 uint8_t LSM9DS1::I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t count)
 {
 	byte retVal;
-	Wire.beginTransmission(address);      // Initialize the Tx buffer
+	settings.device.i2c->beginTransmission(address);      // Initialize the Tx buffer
 	// Next send the register to be read. OR with 0x80 to indicate multi-read.
-	Wire.write(subAddress | 0x80);        // Put slave register address in Tx buffer
-	retVal = Wire.endTransmission(false); // Send Tx buffer, send a restart to keep connection alive
+	settings.device.i2c->write(subAddress | 0x80);        // Put slave register address in Tx buffer
+	retVal = settings.device.i2c->endTransmission(false); // Send Tx buffer, send a restart to keep connection alive
 	if (retVal != 0) // endTransmission should return 0 on success
 		return 0;
-	
-	retVal = Wire.requestFrom(address, count);  // Read bytes from slave register address 
+
+	retVal = settings.device.i2c->requestFrom(address, count);  // Read bytes from slave register address
 	if (retVal != count)
 		return 0;
-	
+
 	for (int i=0; i<count;)
-		dest[i++] = Wire.read();
-	
+		dest[i++] = settings.device.i2c->read();
+
 	return count;
 }

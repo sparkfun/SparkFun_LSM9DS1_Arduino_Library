@@ -22,6 +22,7 @@ Distributed as-is; no warranty is given.
 #define __LSM9DS1_Types_H__
 
 #include "LSM9DS1_Registers.h"
+#include <Wire.h>
 
 // The LSM9DS1 functions over both I2C or SPI. This library supports both.
 // But the interface mode used must be sent to the LSM9DS1 constructor. Use
@@ -199,6 +200,7 @@ struct deviceSettings
 	uint8_t commInterface; // Can be I2C, SPI 4-wire or SPI 3-wire
 	uint8_t agAddress;	 // I2C address or SPI CS pin
 	uint8_t mAddress;	  // I2C address or SPI CS pin
+  TwoWire* i2c;    // pointer to an instance of I2C interface
 };
 
 struct accelSettings
