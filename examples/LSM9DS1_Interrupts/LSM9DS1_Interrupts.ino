@@ -40,6 +40,7 @@ to use I2C. The pin-out is as follows:
    INT2 ------------- D4
    INT1 ------------- D3
    INTM ------------- D5
+   RDY -------------- D6
 (CSG, CSXM, SDOG, and SDOXM should all be pulled high. 
 Jumpers on the breakout board will do this for you.)
 
@@ -86,11 +87,6 @@ void printStats();
 // and sample rates.
 uint16_t configureIMU()
 {
-  // Set up Device Mode (I2C) and I2C addresses:
-  imu.settings.device.commInterface = IMU_MODE_I2C;
-  imu.settings.device.agAddress = LSM9DS1_AG_ADDR(1);
-  imu.settings.device.mAddress = LSM9DS1_M_ADDR(1);
-
   // gyro.latchInterrupt controls the latching of the
   // gyro and accelerometer interrupts (INT1 and INT2).
   // false = no latching
@@ -106,10 +102,10 @@ uint16_t configureIMU()
   imu.settings.mag.scale = 4;
   // Set magnetometer sample rate to 0.625 Hz
   imu.settings.mag.sampleRate = 0;
-
+  
   // Call imu.begin() to initialize the sensor and instill
   // it with our new settings.
-  return imu.begin();
+  return imu.begin(LSM9DS1_AG_ADDR(1), LSM9DS1_M_ADDR(1), Wire); // set addresses and wire port
 }
 
 void configureLSM9DS1Interrupts()
@@ -193,6 +189,8 @@ void setup()
   // The magnetometer DRDY pin (RDY) is not configurable.
   // It is active high and always turned on.
   pinMode(RDYM_PIN, INPUT);
+
+  Wire.begin();
 
   // Turn on the IMU with configureIMU() (defined above)
   // check the return status of imu.begin() to make sure
@@ -312,4 +310,3 @@ void printStats()
   Serial.print(imu.my); Serial.print(", ");
   Serial.println(imu.mz);
 }
-

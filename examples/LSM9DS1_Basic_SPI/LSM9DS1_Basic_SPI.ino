@@ -96,17 +96,10 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz);
 void setup() 
 {
   Serial.begin(115200);
-  
-  // Before initializing the IMU, there are a few settings
-  // we may need to adjust. Use the settings struct to set
-  // the device's communication mode and addresses:
-  imu.settings.device.commInterface = IMU_MODE_SPI;
-  imu.settings.device.mAddress = LSM9DS1_M_CS;
-  imu.settings.device.agAddress = LSM9DS1_AG_CS;
-  // The above lines will only take effect AFTER calling
-  // imu.begin(), which verifies communication with the IMU
+ 
+  // imu.beginSPI(), which verifies communication with the IMU
   // and turns it on.
-  if (!imu.begin())
+  if (!imu.beginSPI(LSM9DS1_AG_CS, LSM9DS1_M_CS)) // note, we need to sent this our CS pins (defined above)
   {
     Serial.println("Failed to communicate with LSM9DS1.");
     Serial.println("Double-check wiring.");
