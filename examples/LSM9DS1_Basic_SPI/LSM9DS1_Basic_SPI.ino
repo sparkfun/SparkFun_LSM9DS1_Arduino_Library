@@ -99,7 +99,7 @@ void setup()
  
   // imu.beginSPI(), which verifies communication with the IMU
   // and turns it on.
-  if (!imu.beginSPI(LSM9DS1_AG_CS, LSM9DS1_M_CS)) // note, we need to sent this our CS pins (defined above)
+  if (imu.beginSPI(LSM9DS1_AG_CS, LSM9DS1_M_CS) == false) // note, we need to sent this our CS pins (defined above)
   {
     Serial.println("Failed to communicate with LSM9DS1.");
     Serial.println("Double-check wiring.");

@@ -196,7 +196,7 @@ void setup()
   // check the return status of imu.begin() to make sure
   // it's connected.
   uint16_t status = configureIMU();
-  if (!status)
+  if (status == false)
   {
     Serial.print("Failed to connect to IMU: 0x");
     Serial.println(status, HEX);
