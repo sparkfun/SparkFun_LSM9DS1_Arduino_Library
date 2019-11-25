@@ -28,6 +28,7 @@ gBiasRaw	KEYWORD2
 aBiasRaw	KEYWORD2
 mBiasRaw	KEYWORD2
 begin	KEYWORD2
+beginSPI	KEYWORD2
 calibrate	KEYWORD2
 calibrateMag	KEYWORD2
 magOffset	KEYWORD2

@@ -69,13 +69,21 @@ public:
 	// 				If IMU_MODE_SPI, this is the chip select pin of the gyro (CS_AG)
 	//	- mAddr = If IMU_MODE_I2C, this is the I2C address of the magnetometer.
 	//				If IMU_MODE_SPI, this is the cs pin of the magnetometer (CS_M)
-	LSM9DS1(interface_mode interface, uint8_t xgAddr, uint8_t mAddr);
 	LSM9DS1();
 		
-	// begin() -- Initialize the gyro, accelerometer, and magnetometer.
+	// begin() and beginSPI() -- Initialize the gyro, accelerometer, and magnetometer.
 	// This will set up the scale and output rate of each sensor. The values set
 	// in the IMUSettings struct will take effect after calling this function.
-	uint16_t begin();
+	// INPUTS:
+	// - agAddress - Sets either the I2C address of the accel/gyro or SPI chip 
+	//   select pin connected to the CS_XG pin.
+	// - mAddress - Sets either the I2C address of the magnetometer or SPI chip 
+	//   select pin connected to the CS_M pin.
+	// - i2C port (Note, only on "begin()" funtion, for use with I2C com interface)
+	//   defaults to Wire, but if hardware supports it, can use other TwoWire ports.
+	//   **For SPI use "beginSPI()", and only send first two address arguments.
+	uint16_t begin(uint8_t agAddress = LSM9DS1_AG_ADDR(1), uint8_t mAddress = LSM9DS1_M_ADDR(1), TwoWire &wirePort = Wire); //By default use the default I2C addres, and use Wire port
+	uint16_t beginSPI(uint8_t ag_CS_pin, uint8_t m_CS_pin);
 	
 	void calibrate(bool autoCalc = true);
 	void calibrateMag(bool loadIn = true);
@@ -345,12 +353,8 @@ protected:
 	bool _autoCalc;
 	
 	// init() -- Sets up gyro, accel, and mag settings to default.
-	// - interface - Sets the interface mode (IMU_MODE_I2C or IMU_MODE_SPI)
-	// - xgAddr - Sets either the I2C address of the accel/gyro or SPI chip 
-	//   select pin connected to the CS_XG pin.
-	// - mAddr - Sets either the I2C address of the magnetometer or SPI chip 
-	//   select pin connected to the CS_M pin.
-	void init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr);
+	// to set com interface and/or addresses see begin() and beginSPI().
+	void init();
 	
 	// initGyro() -- Sets up the gyroscope to begin reading.
 	// This function steps through all five gyroscope control registers.
@@ -491,9 +495,6 @@ protected:
 	///////////////////
 	// I2C Functions //
 	///////////////////
-	// initI2C() -- Initialize the I2C hardware.
-	// This function will setup all I2C pins and related hardware.
-	void initI2C();
 	
 	// I2CwriteByte() -- Write a byte out of I2C to a register in the device
 	// Input:

@@ -49,6 +49,10 @@ Distributed as-is; no warranty is given.
 
 LSM9DS1 imu;  // Create an LSM9DS1 object
 
+// SDO_XM and SDO_G are both pulled high, so our addresses are:
+#define LSM9DS1_M  0x1E // Would be 0x1C if SDO_M is LOW
+#define LSM9DS1_AG 0x6B // Would be 0x6A if SDO_AG is LOW
+
 // Global variables to keep track of update rates
 unsigned long startTime;
 unsigned int accelReadCounter = 0;
@@ -62,20 +66,6 @@ const unsigned int PRINT_RATE = 500;
 
 //Function definitions
 void printSensorReadings();
-
-void setupDevice()
-{
-  // [commInterface] determines whether we'll use I2C or SPI
-  // to communicate with the LSM9DS1.
-  // Use either IMU_MODE_I2C or IMU_MODE_SPI
-  imu.settings.device.commInterface = IMU_MODE_I2C;
-  // [mAddress] sets the I2C address or SPI CS pin of the
-  // LSM9DS1's magnetometer.
-  imu.settings.device.mAddress = 0x1E; // Use I2C addres 0x1E
-  // [agAddress] sets the I2C address or SPI CS pin of the
-  // LSM9DS1's accelerometer/gyroscope.
-  imu.settings.device.agAddress = 0x6B; // I2C address 0x6B
-}
 
 void setupGyro()
 {
@@ -192,18 +182,19 @@ void setupTemperature()
 
 uint16_t initLSM9DS1()
 {
-  setupDevice(); // Setup general device parameters
   setupGyro(); // Set up gyroscope parameters
   setupAccel(); // Set up accelerometer parameters
   setupMag(); // Set up magnetometer parameters
   setupTemperature(); // Set up temp sensor parameter
   
-  return imu.begin();
+  return imu.begin(LSM9DS1_AG, LSM9DS1_M, Wire); // for SPI use beginSPI()
 }
 
 void setup() 
 {
   Serial.begin(115200);
+
+  Wire.begin();
   
   Serial.println("Initializing the LSM9DS1");
   uint16_t status = initLSM9DS1();
@@ -300,4 +291,3 @@ void printSensorReadings()
   Serial.println(" Hz");  
   Serial.println();
 }
-

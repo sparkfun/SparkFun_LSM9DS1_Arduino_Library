@@ -50,20 +50,10 @@ Distributed as-is; no warranty is given.
 
 LSM9DS1::LSM9DS1()
 {
-	init(IMU_MODE_I2C, LSM9DS1_AG_ADDR(1), LSM9DS1_M_ADDR(1));
 }
 
-LSM9DS1::LSM9DS1(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
+void LSM9DS1::init()
 {
-	init(interface, xgAddr, mAddr);
-}
-
-void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
-{
-	settings.device.commInterface = interface;
-	settings.device.agAddress = xgAddr;
-	settings.device.mAddress = mAddr;
-
 	settings.gyro.enabled = true;
 	settings.gyro.enableX = true;
 	settings.gyro.enableY = true;
@@ -150,11 +140,65 @@ void LSM9DS1::init(interface_mode interface, uint8_t xgAddr, uint8_t mAddr)
 }
 
 
-uint16_t LSM9DS1::begin()
+uint16_t LSM9DS1::begin(uint8_t agAddress, uint8_t mAddress, TwoWire &wirePort)
 {
+	// Set device settings, they are used in many other places
+	settings.device.commInterface = IMU_MODE_I2C;
+	settings.device.agAddress = agAddress;
+	settings.device.mAddress = mAddress;
+	settings.device.i2c = &wirePort;
+	
 	//! Todo: don't use _xgAddress or _mAddress, duplicating memory
 	_xgAddress = settings.device.agAddress;
 	_mAddress = settings.device.mAddress;
+	
+	init();
+	
+	constrainScales();
+	// Once we have the scale values, we can calculate the resolution
+	// of each sensor. That's what these functions are for. One for each sensor
+	calcgRes(); // Calculate DPS / ADC tick, stored in gRes variable
+	calcmRes(); // Calculate Gs / ADC tick, stored in mRes variable
+	calcaRes(); // Calculate g / ADC tick, stored in aRes variable
+	
+	// We expect caller to begin their I2C port, with the speed of their choice external to the library
+	// But if they forget, we could start the hardware here.
+	// settings.device.i2c->begin();	// Initialize I2C library
+		
+	// To verify communication, we can read from the WHO_AM_I register of
+	// each device. Store those in a variable so we can return them.
+	uint8_t mTest = mReadByte(WHO_AM_I_M);		// Read the gyro WHO_AM_I
+	uint8_t xgTest = xgReadByte(WHO_AM_I_XG);	// Read the accel/mag WHO_AM_I
+	uint16_t whoAmICombined = (xgTest << 8) | mTest;
+	
+	if (whoAmICombined != ((WHO_AM_I_AG_RSP << 8) | WHO_AM_I_M_RSP))
+		return 0;
+	
+	// Gyro initialization stuff:
+	initGyro();	// This will "turn on" the gyro. Setting up interrupts, etc.
+	
+	// Accelerometer initialization stuff:
+	initAccel(); // "Turn on" all axes of the accel. Set up interrupts, etc.
+	
+	// Magnetometer initialization stuff:
+	initMag(); // "Turn on" all axes of the mag. Set up interrupts, etc.
+
+	// Once everything is initialized, return the WHO_AM_I registers we read:
+	return whoAmICombined;
+}
+
+uint16_t LSM9DS1::beginSPI(uint8_t ag_CS_pin, uint8_t m_CS_pin)
+{
+	// Set device settings, they are used in many other places
+	settings.device.commInterface = IMU_MODE_SPI;
+	settings.device.agAddress = ag_CS_pin;
+	settings.device.mAddress = m_CS_pin;	
+	
+	//! Todo: don't use _xgAddress or _mAddress, duplicating memory
+	_xgAddress = settings.device.agAddress;
+	_mAddress = settings.device.mAddress;
+	
+	init();
 	
 	constrainScales();
 	// Once we have the scale values, we can calculate the resolution
@@ -164,10 +208,7 @@ uint16_t LSM9DS1::begin()
 	calcaRes(); // Calculate g / ADC tick, stored in aRes variable
 	
 	// Now, initialize our hardware interface.
-	if (settings.device.commInterface == IMU_MODE_I2C)	// If we're using I2C
-		initI2C();	// Initialize I2C
-	else if (settings.device.commInterface == IMU_MODE_SPI) 	// else, if we're using SPI
-		initSPI();	// Initialize SPI
+	initSPI();	// Initialize SPI
 		
 	// To verify communication, we can read from the WHO_AM_I register of
 	// each device. Store those in a variable so we can return them.
@@ -335,8 +376,7 @@ void LSM9DS1::initAccel()
 // remove errors due to imprecise or varying initial placement. Calibration of sensor data in this manner
 // is good practice.
 void LSM9DS1::calibrate(bool autoCalc)
-{  
-	uint8_t data[6] = {0, 0, 0, 0, 0, 0};
+{
 	uint8_t samples = 0;
 	int ii;
 	int32_t aBiasRawTemp[3] = {0, 0, 0};
@@ -1148,49 +1188,44 @@ uint8_t LSM9DS1::SPIreadBytes(uint8_t csPin, uint8_t subAddress,
 	return count;
 }
 
-void LSM9DS1::initI2C()
-{
-	Wire.begin();	// Initialize I2C library
-}
-
 // Wire.h read and write protocols
 void LSM9DS1::I2CwriteByte(uint8_t address, uint8_t subAddress, uint8_t data)
 {
-	Wire.beginTransmission(address);  // Initialize the Tx buffer
-	Wire.write(subAddress);           // Put slave register address in Tx buffer
-	Wire.write(data);                 // Put data in Tx buffer
-	Wire.endTransmission();           // Send the Tx buffer
+	settings.device.i2c->beginTransmission(address);  // Initialize the Tx buffer
+	settings.device.i2c->write(subAddress);           // Put slave register address in Tx buffer
+	settings.device.i2c->write(data);                 // Put data in Tx buffer
+	settings.device.i2c->endTransmission();           // Send the Tx buffer
 }
 
 uint8_t LSM9DS1::I2CreadByte(uint8_t address, uint8_t subAddress)
 {
-	uint8_t data; // `data` will store the register data	
-	
-	Wire.beginTransmission(address);         // Initialize the Tx buffer
-	Wire.write(subAddress);	                 // Put slave register address in Tx buffer
-	Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
-	Wire.requestFrom(address, (uint8_t) 1);  // Read one byte from slave register address 
-	
-	data = Wire.read();                      // Fill Rx buffer with result
+	uint8_t data; // `data` will store the register data
+
+	settings.device.i2c->beginTransmission(address);         // Initialize the Tx buffer
+	settings.device.i2c->write(subAddress);	                 // Put slave register address in Tx buffer
+	settings.device.i2c->endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+	settings.device.i2c->requestFrom(address, (uint8_t) 1);  // Read one byte from slave register address
+
+	data = settings.device.i2c->read();                      // Fill Rx buffer with result
 	return data;                             // Return data read from slave register
 }
 
 uint8_t LSM9DS1::I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t count)
 {
 	byte retVal;
-	Wire.beginTransmission(address);      // Initialize the Tx buffer
+	settings.device.i2c->beginTransmission(address);      // Initialize the Tx buffer
 	// Next send the register to be read. OR with 0x80 to indicate multi-read.
-	Wire.write(subAddress | 0x80);        // Put slave register address in Tx buffer
-	retVal = Wire.endTransmission(false); // Send Tx buffer, send a restart to keep connection alive
+	settings.device.i2c->write(subAddress | 0x80);        // Put slave register address in Tx buffer
+	retVal = settings.device.i2c->endTransmission(false); // Send Tx buffer, send a restart to keep connection alive
 	if (retVal != 0) // endTransmission should return 0 on success
 		return 0;
-	
-	retVal = Wire.requestFrom(address, count);  // Read bytes from slave register address 
+
+	retVal = settings.device.i2c->requestFrom(address, count);  // Read bytes from slave register address
 	if (retVal != count)
 		return 0;
-	
+
 	for (int i=0; i<count;)
-		dest[i++] = Wire.read();
-	
+		dest[i++] = settings.device.i2c->read();
+
 	return count;
 }
