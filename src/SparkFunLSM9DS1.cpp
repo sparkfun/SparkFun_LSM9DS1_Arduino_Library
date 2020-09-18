@@ -607,13 +607,26 @@ int16_t LSM9DS1::readMag(lsm9ds1_axis axis)
 	return 0;
 }
 
+typedef union
+{
+	struct
+	{
+		int16_t data :12;
+		int16_t Reserved :4;
+	};
+	int16_t word;
+} int12_t;
+
 void LSM9DS1::readTemp()
 {
 	uint8_t temp[2]; // We'll read two bytes from the temperature sensor into temp	
 	if ( xgReadBytes(OUT_TEMP_L, temp, 2) == 2 ) // Read 2 bytes, beginning at OUT_TEMP_L
 	{
+		int12_t degree;
+		degree.word = ( ( int16_t )temp[ 1 ] << 8 ) | ( int16_t ) temp[ 0 ];
+		
 		int16_t offset = 25;  // Per datasheet sensor outputs 0 typically @ 25 degrees centigrade
-		temperature = offset + ((((int16_t)temp[1] << 8) | temp[0]) >> 8) ;
+		temperature = offset + degree.data / 16;
 	}
 }
 
