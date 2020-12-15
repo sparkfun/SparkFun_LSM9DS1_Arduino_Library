@@ -50,6 +50,7 @@ Distributed as-is; no warranty is given.
 
 LSM9DS1::LSM9DS1()
 {
+	init(); //Initialise settings
 }
 
 void LSM9DS1::init()
@@ -152,8 +153,6 @@ uint16_t LSM9DS1::begin(uint8_t agAddress, uint8_t mAddress, TwoWire &wirePort)
 	_xgAddress = settings.device.agAddress;
 	_mAddress = settings.device.mAddress;
 	
-	init();
-	
 	constrainScales();
 	// Once we have the scale values, we can calculate the resolution
 	// of each sensor. That's what these functions are for. One for each sensor
@@ -197,8 +196,6 @@ uint16_t LSM9DS1::beginSPI(uint8_t ag_CS_pin, uint8_t m_CS_pin)
 	//! Todo: don't use _xgAddress or _mAddress, duplicating memory
 	_xgAddress = settings.device.agAddress;
 	_mAddress = settings.device.mAddress;
-	
-	init();
 	
 	constrainScales();
 	// Once we have the scale values, we can calculate the resolution
