@@ -71,9 +71,8 @@ public:
 	//				If IMU_MODE_SPI, this is the cs pin of the magnetometer (CS_M)
 	LSM9DS1();
 		
-	// begin() and beginSPI() -- Initialize the gyro, accelerometer, and magnetometer.
-	// This will set up the scale and output rate of each sensor. The values set
-	// in the IMUSettings struct will take effect after calling this function.
+	// begin() and beginSPI() -- The values set in the IMUSettings struct will take
+	// effect after calling this function.
 	// INPUTS:
 	// - agAddress - Sets either the I2C address of the accel/gyro or SPI chip 
 	//   select pin connected to the CS_XG pin.
