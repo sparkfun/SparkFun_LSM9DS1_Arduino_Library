@@ -1137,13 +1137,12 @@ void LSM9DS1::initSPI()
 	digitalWrite(_mAddress, HIGH);
 	
 	SPI.begin();
-	// Maximum SPI frequency is 10MHz, could divide by 2 here:
-	SPI.setClockDivider(SPI_CLOCK_DIV2);
+	// Maximum SPI frequency is 10MHz
 	// Data is read and written MSb first.
-	SPI.setBitOrder(MSBFIRST);
+	// Data is read and written MSb first.
 	// Data is captured on rising edge of clock (CPHA = 0)
 	// Base value of the clock is HIGH (CPOL = 1)
-	SPI.setDataMode(SPI_MODE0);
+	SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
 }
 
 void LSM9DS1::SPIwriteByte(uint8_t csPin, uint8_t subAddress, uint8_t data)
