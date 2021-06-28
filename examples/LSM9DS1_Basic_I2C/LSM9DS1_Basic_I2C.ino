@@ -225,9 +225,9 @@ void printMag()
 
 // Calculate pitch, roll, and heading.
 // Pitch/roll calculations take from this app note:
-// http://cache.freescale.com/files/sensors/doc/app_note/AN3461.pdf?fpsp=1
+// https://web.archive.org/web/20190824101042/http://cache.freescale.com/files/sensors/doc/app_note/AN3461.pdf
 // Heading calculations taken from this app note:
-// http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/Magnetic__Literature_Application_notes-documents/AN203_Compass_Heading_Using_Magnetometers.pdf
+// https://web.archive.org/web/20150513214706/http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/Magnetic__Literature_Application_notes-documents/AN203_Compass_Heading_Using_Magnetometers.pdf
 void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
 {
   float roll = atan2(ay, az);
