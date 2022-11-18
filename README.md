@@ -1,5 +1,6 @@
 SparkFun LSM9DS1 Arduino Library
 ======================
+[![Compile Examples](https://github.com/sparkfun/SparkFun_LSM9DS1_Arduino_Library/workflows/Compile%20Examples/badge.svg)](https://github.com/sparkfun/SparkFun_LSM9DS1_Arduino_Library/actions?workflow=Compile+Examples)
 
 [![Breakout Board ISO](https://cdn.sparkfun.com//assets/parts/1/0/5/3/3/13284-02.jpg)](https://www.sparkfun.com/products/13284)
 
